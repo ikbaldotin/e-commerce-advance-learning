@@ -1,5 +1,4 @@
-import { Role, User } from "@prisma/client";
-import { registerUserDTO } from "./auth.sechema.js";
+import { RefreshToken, Role, User } from "@prisma/client";
 
 export interface IAuthRepository {
   getUserByEmail(email: string): Promise<User | null>;
@@ -11,4 +10,9 @@ export interface IAuthRepository {
     phoneNumber: string,
     role: Role,
   ): Promise<User>;
+  createRefreshToken(data: {
+    token: string;
+    userId: string;
+    expriesAt: Date;
+  }): Promise<RefreshToken>;
 }
