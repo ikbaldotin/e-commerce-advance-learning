@@ -35,8 +35,28 @@ export const verifySeller = (
   next: NextFunction,
 ) => {
   const user = req.user;
-  if (user?.role !== "SELLER") {
-    throw new AppError("You are not authorizeed", 401);
+  try {
+    if (user?.role !== "SELLER") {
+      throw new AppError("You are not authorizeed", 401);
+    }
+    next();
+  } catch (error) {
+    throw new AppError("sometihing is wrong in verify user", 404);
   }
-  next();
+};
+
+export const verifyAdmin = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const user = req.user;
+    if (user.role !== "ADMIN") {
+      throw new AppError("You are not authorizeed", 401);
+    }
+    next();
+  } catch (error) {
+    throw new AppError("sometihing is wrong in admin user", 404);
+  }
 };
