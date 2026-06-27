@@ -1,5 +1,10 @@
 import { Request, Response } from "express";
-import { loginUserDTO, registerUserDTO } from "./auth.sechema.js";
+import {
+  loginUserDTO,
+  logoutUserDTO,
+  refreshTokenDTO,
+  registerUserDTO,
+} from "./auth.sechema.js";
 import { IAuthRepository } from "./auth.interface.js";
 import { AppError } from "../../utils/AppError.js";
 import {
@@ -12,7 +17,9 @@ import {
   generateAccessToken,
   generateRefreshToken,
   toJwtPayload,
+  verifyRefreshToken,
 } from "../../utils/jwt.helper.js";
+import { IJwtPayLoad } from "../../types/index.js";
 
 export class AuthService {
   constructor(private userRepo: IAuthRepository) {}
@@ -73,6 +80,67 @@ export class AuthService {
       user: toUserResponse(exitingUser),
       accessToken,
       refreshToken,
+    };
+  }
+  async getCurrentUser(userId: string) {
+    const user = await this.userRepo.getUserById(userId);
+    console.log("service", user);
+    if (!user) {
+      throw new AppError("user is not found", 404);
+    }
+    return toUserResponse(user);
+  }
+  async logout(data: logoutUserDTO) {
+    const { refreshToken } = data;
+    const hashedRefreshToken = hashRefreshToken(refreshToken);
+    const exitingRefreshToken =
+      await this.userRepo.findRefreshToken(hashedRefreshToken);
+    if (!exitingRefreshToken) {
+      throw new AppError("Invalid refreshToken", 401);
+    }
+    await this.userRepo.deleteRefreshTokenById(exitingRefreshToken.id);
+    return true;
+  }
+  async logoutAllDevices(userId: string) {
+    await this.userRepo.deleteAllRefreshTokenByUserId(userId);
+    return true;
+  }
+  async refreshToken(data: refreshTokenDTO) {
+    const { refreshToken } = data;
+
+    let decoded;
+    try {
+      decoded = verifyRefreshToken(refreshToken) as IJwtPayLoad;
+    } catch (error) {
+      throw new AppError("invalid or refresh token is expires", 403);
+    }
+    const user = await this.userRepo.getUserById(decoded.id);
+    if (!user) {
+      throw new AppError("Invalid credential", 401);
+    }
+    const hashedOldRefreshToken = hashRefreshToken(refreshToken);
+
+    const exitingRefreshToken = await this.userRepo.findRefreshToken(
+      hashedOldRefreshToken,
+    );
+
+    if (!exitingRefreshToken) {
+      throw new AppError("refresh token is not found", 404);
+    }
+    await this.userRepo.deleteRefreshTokenById(exitingRefreshToken.id);
+    const newJwtPayload = toJwtPayload(user);
+    const newAccessToken = generateAccessToken(newJwtPayload);
+    const newRefreshToken = generateRefreshToken(newJwtPayload);
+    const hashedRefreshToken = hashRefreshToken(newRefreshToken);
+
+    await this.userRepo.createRefreshToken({
+      token: hashedRefreshToken,
+      userId: decoded.id,
+      expriesAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    });
+    return {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
     };
   }
 }

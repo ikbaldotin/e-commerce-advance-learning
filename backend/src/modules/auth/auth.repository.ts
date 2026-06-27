@@ -1,8 +1,17 @@
-import { Role, User } from "@prisma/client";
+import { RefreshToken, Role, User } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
 import { IAuthRepository } from "./auth.interface.js";
 
 export class AuthRepository implements IAuthRepository {
+  async getUserById(userId: string): Promise<User | null> {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    return user;
+  }
   async getUserByEmail(email: string): Promise<User | null> {
     const user = await prisma.user.findUnique({
       where: {
@@ -41,5 +50,28 @@ export class AuthRepository implements IAuthRepository {
     });
     return token;
   }
-  async loginUser(data: { email: string; password: string }) {}
+  async findRefreshToken(
+    hashedRefreshToken: string,
+  ): Promise<RefreshToken | null> {
+    const refreshToken = await prisma.refreshToken.findUnique({
+      where: {
+        token: hashedRefreshToken,
+      },
+    });
+    return refreshToken;
+  }
+  async deleteRefreshTokenById(refreshTokenId: string): Promise<any> {
+    await prisma.refreshToken.delete({
+      where: {
+        id: refreshTokenId,
+      },
+    });
+  }
+  async deleteAllRefreshTokenByUserId(userId: string): Promise<any> {
+    await prisma.refreshToken.deleteMany({
+      where: {
+        userId,
+      },
+    });
+  }
 }

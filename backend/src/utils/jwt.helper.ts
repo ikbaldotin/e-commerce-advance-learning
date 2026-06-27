@@ -10,20 +10,20 @@ import jwt, { SignOptions } from "jsonwebtoken";
 const accessTokenSecret = ACCESS_TOKEN_SECRET!;
 const accessTokenExpiry = ACCESS_TOKEN_EXPIRY as SignOptions["expiresIn"];
 export const generateAccessToken = (user: IJwtPayLoad) => {
-  return jwt.sign({ user }, accessTokenSecret, {
+  return jwt.sign(user, accessTokenSecret, {
     expiresIn: accessTokenExpiry,
   });
 };
 const refreshTokenSecret = REFRESH_TOKEN_SECRET!;
 const refreshTokenExpiry = REFRESH_TOKEN_EXPIRY as SignOptions["expiresIn"];
 export const generateRefreshToken = (user: IJwtPayLoad) => {
-  return jwt.sign({ user }, refreshTokenSecret, {
+  return jwt.sign(user, refreshTokenSecret, {
     expiresIn: refreshTokenExpiry,
   });
 };
 
 export const verifyAccessToken = (token: string) => {
-  return jwt.verify(token, accessTokenSecret);
+  return jwt.verify(token, accessTokenSecret) as IJwtPayLoad;
 };
 
 export const verifyRefreshToken = (token: string) => {
