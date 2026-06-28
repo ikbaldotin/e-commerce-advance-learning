@@ -5,8 +5,16 @@ import {
   verifyUser,
 } from "../../middlewares/aurh.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
-import { createCategorySchema } from "./category.schema.js";
-import { createCategoryController } from "./category.controller.js";
+import {
+  createCategorySchema,
+  updateCategorySchema,
+} from "./category.schema.js";
+import {
+  createCategoryController,
+  deleteCategoryController,
+  getAllCategoryController,
+  updateCategoryController,
+} from "./category.controller.js";
 
 const router = express.Router();
 
@@ -18,5 +26,16 @@ router
     validate(createCategorySchema),
     createCategoryController,
   );
-
+router.route("/all-category").get(getAllCategoryController);
+router
+  .route("/update-category/:catId")
+  .patch(verifyUser, verifyAdmin, updateCategoryController);
+router
+  .route("/delete-category/:catId")
+  .delete(
+    verifyUser,
+    verifyAdmin,
+    validate(updateCategorySchema),
+    deleteCategoryController,
+  );
 export default router;
