@@ -8,6 +8,7 @@ export const createOrderSchema = z
         quantity: z.number().min(1, "at least one item "),
       }),
     ),
+    addressId: z.string(),
   })
   .strict();
 export const updatedOrderStatusSchema = z

@@ -11,6 +11,7 @@ export class OrderRepository implements IOrderRepsitory {
       },
       include: {
         items: true,
+        orderAddresses: true,
       },
     });
     return order;
@@ -22,6 +23,7 @@ export class OrderRepository implements IOrderRepsitory {
       },
       include: {
         items: true,
+        orderAddresses: true,
       },
     });
     return order;
